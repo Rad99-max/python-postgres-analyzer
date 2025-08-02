@@ -1,5 +1,5 @@
 # Пример запуска из терминала:
-# python ваш_скрипт.py --limit 3 --output top_films_report.csv
+# python ваш_скрипт.py --limit 10 --output top_films_report.csv
 
 import argparse
 import psycopg2
@@ -9,7 +9,6 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv() # Загружает переменные из файла .env
-
 # -------------------------------------------
 # БЛОК 1: ФУНКЦИЯ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ
 # -------------------------------------------
@@ -21,80 +20,52 @@ def get_data_from_db(limit):
         "password": os.getenv("DB_PASSWORD"),
         "port": os.getenv("DB_PORT", "5432")
     }
-    # Универсальный и "честный" SQL-запрос
     sql_query = """
-        with RankedFilms as (
-            select
-                title,
-                rating,
-                length,
-                dense_rank() over (partition by rating order by length desc) as drnk
-            from film
-        )
-        select
-            title,
-            rating,
-            length
+        select 
+    	    a.first_name,
+	        a.last_name,
+        	count(*)
         from 
-            RankedFilms
-        where
-            drnk <= %s
+        	actor a
+        join 
+	        film_actor using(actor_id)
+        group by
+	        a.actor_id
         order by
-            case rating
-                when 'G'        THEN 1
-                WHEN 'PG'       THEN 2
-                WHEN 'PG-13'    THEN 3
-                WHEN 'R'        THEN 4
-                WHEN 'NC-17'    THEN 5
-                ELSE 6
-            END,
-            length desc -- Вторичная сортировка по длине для красоты вывода            
+	        count(*) desc
+        limit %s;
     """
     try:
         print("Подключаюсь к базе данных...")
         with psycopg2.connect(**conn_params) as conn:
             with conn.cursor() as cursor:
-                print(f"Выполняю запрос для Топ-{limit} фильмов...")
                 cursor.execute(sql_query, (limit,))
                 results = cursor.fetchall()
                 print("Данные успешно получены.")
-
         print("Соединение с PostgreSQL закрыто.")
         return results
-
     except OperationalError as e:
         print(f"Ошибка подключения к базе данных: {e}")
         return None
     except Exception as e:
         print(f"Произошла ошибка при выполнении запроса: {e}")
         return None
-
 # -------------------------------------------
 # БЛОК 2: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
 # -------------------------------------------
-def display_results(films):
-    if not films:
+def display_results(actors, limit):
+    if not actors:
         print("Нет данных для отображения.")
         return
-    print("\n--- Топ самых длинных фильмов по рейтингам ---")
-    current_rating = None #
-
-    for title, rating, length in films:
-        if current_rating != rating:
-            if current_rating is not None:
-                print('-' * 55)
-            current_rating = rating
-            print(f"\nРейтинг: {current_rating}")
-            print('-' * 55)
-            print(f"| {'Название фильма':<35} | "
-                  f"{'Длительность':>13} |")
-            print('-' * 55)
-
-        print(f"| {title:<35} | {length:>9} мин |")
-
-    if films:
-        print('-' * 55)
-
+    print(f"\n--- Топ-{limit} самых популярных актеров ---")
+    print('-' * 60)
+    print(f"| {'Имя':<20} | {'Фамилия':<20} |"
+          f"{'Количество фильмов':>10} |")
+    print('-' * 60)
+    for first_name, last_name, count_films in actors:
+        print(f"| {first_name:<20} | {last_name:<20} |"
+              f"{count_films:>10} |")
+    print('-' * 60)
 # -------------------------------------------
 # БЛОК 3: ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ В CSV-файл
 # -------------------------------------------
@@ -102,7 +73,7 @@ def save_report_to_csv(data, filename):
     if not data:
         print("Нет данных для сохранения в файл.")
         return
-    header = ['Название фильма', 'Рейтинг', 'Длительность (мин)']
+    header = ['Имя', 'Фамилия', 'Количество фильмов']
     print(f"\nСохраняю отчет в файл {filename}...")
 
     try:
@@ -120,26 +91,24 @@ def save_report_to_csv(data, filename):
 # -------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
-            description="Создает отчет по самым длинным "
-                        "фильмам для каждого рейтинга."
+            description="Создает отчет по самым "
+                        "популярным актерам"
     )
     parser.add_argument(
             '--limit',
             type=int,
-            required=True,
-            help="Обязательный параметр. Ранг, до которого "
-                 "включать фильмы в отчет (например, 3 для Топ-3)."
+            default=10,
+            help=f"По умолчанию Топ-10 актеров"
     )
     parser.add_argument(
             '--output',
-            default="top_films_by_rating.csv",
+            default="top_actors.csv",
             help="Имя файла для сохранения CSV-отчета."
     )
     args = parser.parse_args()
     film_data = get_data_from_db(args.limit)
-
     if film_data:
-        display_results(film_data)
+        display_results(film_data, args.limit)
         save_report_to_csv(film_data, args.output)
     else:
         print("Не удалось получить данные. Программа завершена.")
