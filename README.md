@@ -1,21 +1,31 @@
-# python-postgres-analyzer
-A Python script that connects to a  PostgreSQL database to generate a report on the longest films.
+# Анализатор базы данных "learning_db"
+Этот проект представляет собой набор Python-скриптов для анализа 
+данных из учебной базы данных PostgreSQL `learning_db`.
 
-## How to Use
-1.  Clone the repository:
-    ```
+## Функциональность
+
+*   `actor_analyzer.py`: Создает отчет по самым популярным актерам 
+(по количеству фильмов, в которых они снялись).
+*   `client_analyzer.py`: Создает отчет по самым активным клиентам 
+(по количеству взятых в прокат фильмов).
+
+## Как запустить
+
+1.  Клонируйте репозиторий:
+    ```bash
     git clone https://github.com/Rad99-max/python-postgres-analyzer.git
-    ```
-2.  Navigate to the project directory:
-    ```
     cd python-postgres-analyzer
     ```
-3.  Create a `.env` file with your database credentials. See `.env.example` for reference.
-4.  Install the required libraries:
-    ```
+2.  Создайте и настройте файл `.env` с вашими данными для 
+подключения к БД `learning_db`.
+
+
+3.  Установите необходимые зависимости:
+    ```bash
     pip install -r requirements.txt
     ```
-5.  Run the script:
-    ```
-    python save_CSV_interact_1.py --limit 5 --output report.csv
+
+4.  Запустите нужный скрипт, например:
+    ```bash
+    python actor_analyzer.py --limit 5
     ```
