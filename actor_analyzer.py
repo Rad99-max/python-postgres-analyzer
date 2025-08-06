@@ -1,55 +1,10 @@
 # Пример запуска из терминала:
-# python ваш_скрипт.py --limit 10 --output top_films_report.csv
+# python actor_analyzer.py --limit 10 --output top_films_report.csv
 
 import argparse
-import psycopg2
-from psycopg2 import OperationalError
 import csv
-import os
-from dotenv import load_dotenv
+from database import execute_query
 
-load_dotenv() # Загружает переменные из файла .env
-# -------------------------------------------
-# БЛОК 1: ФУНКЦИЯ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ
-# -------------------------------------------
-def get_data_from_db(limit):
-    conn_params = {
-        "host": os.getenv("DB_HOST"),
-        "dbname": os.getenv("DB_NAME"),
-        "user": os.getenv("DB_USER"),
-        "password": os.getenv("DB_PASSWORD"),
-        "port": os.getenv("DB_PORT", "5432")
-    }
-    sql_query = """
-        select 
-    	    a.first_name,
-	        a.last_name,
-        	count(*)
-        from 
-        	actor a
-        join 
-	        film_actor using(actor_id)
-        group by
-	        a.actor_id
-        order by
-	        count(*) desc
-        limit %s;
-    """
-    try:
-        print("Подключаюсь к базе данных...")
-        with psycopg2.connect(**conn_params) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(sql_query, (limit,))
-                results = cursor.fetchall()
-                print("Данные успешно получены.")
-        print("Соединение с PostgreSQL закрыто.")
-        return results
-    except OperationalError as e:
-        print(f"Ошибка подключения к базе данных: {e}")
-        return None
-    except Exception as e:
-        print(f"Произошла ошибка при выполнении запроса: {e}")
-        return None
 # -------------------------------------------
 # БЛОК 2: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
 # -------------------------------------------
@@ -59,12 +14,12 @@ def display_results(actors, limit):
         return
     print(f"\n--- Топ-{limit} самых популярных актеров ---")
     print('-' * 60)
-    print(f"| {'Имя':<20} | {'Фамилия':<20} |"
-          f"{'Количество фильмов':>10} |")
+    print(f"| {'Имя':<17} | {'Фамилия':<19} |"
+          f"{'Кол-во фильмов':>15} |")
     print('-' * 60)
     for first_name, last_name, count_films in actors:
-        print(f"| {first_name:<20} | {last_name:<20} |"
-              f"{count_films:>10} |")
+        print(f"| {first_name:<17} | {last_name:<19} |"
+              f"{count_films:>15} |")
     print('-' * 60)
 # -------------------------------------------
 # БЛОК 3: ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ В CSV-файл
@@ -106,7 +61,25 @@ def main():
             help="Имя файла для сохранения CSV-отчета."
     )
     args = parser.parse_args()
-    film_data = get_data_from_db(args.limit)
+
+# --- Формируем запрос и вызываем универсальную функцию ---
+    sql_query = """
+        select 
+            a.first_name,
+            a.last_name,
+            count(*)
+        from
+            actor a
+        join
+            film_actor using(actor_id)
+        group by
+            a.actor_id
+        order by
+            count(*) desc
+        limit %s;
+    """
+# Вызываем нашу новую функцию, передавая ей запрос и параметры
+    film_data = execute_query(sql_query, (args.limit,))
     if film_data:
         display_results(film_data, args.limit)
         save_report_to_csv(film_data, args.output)
