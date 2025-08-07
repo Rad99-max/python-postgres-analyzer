@@ -1,60 +1,12 @@
 # Пример запуска из терминала:
-"""python top_rented_film_analyzer.py --limit 5
+"""python top_rented_film_analyzer.py --limit 7
 --output top_rented_films.csv"""
 
 import argparse
-import psycopg2
-from psycopg2 import OperationalError
 import csv
-import os
-from dotenv import load_dotenv
-
-load_dotenv() # Загружает переменные из файла .env
+from database import execute_query
 # -------------------------------------------
-# БЛОК 1: ФУНКЦИЯ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ
-# -------------------------------------------
-def get_data_from_db(limit):
-    conn_params = {
-        "host": os.getenv("DB_HOST"),
-        "dbname": os.getenv("DB_NAME"),
-        "user": os.getenv("DB_USER"),
-        "password": os.getenv("DB_PASSWORD"),
-        "port": os.getenv("DB_PORT", "5432")
-    }
-    sql_query = """
-        select
-        	f.title,
-        	count(r.rental_id) as rental_count
-        from
-	        film f
-        join 
-	        inventory using(film_id)
-        join 
-	        rental r using(inventory_id)
-        group by
-	        f.film_id
-        order by 
-	        rental_count desc
-        limit %s;
-    """
-    try:
-        print("Подключаюсь к базе данных...")
-        with psycopg2.connect(**conn_params) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(sql_query, (limit,))
-                results = cursor.fetchall()
-                print("Данные успешно получены.")
-        print("Соединение с PostgreSQL закрыто.")
-        return results
-    except OperationalError as e:
-        print(f"Ошибка подключения к базе данных: {e}")
-        return None
-    except Exception as e:
-        print(f"Произошла ошибка при выполнении запроса: {e}")
-        return None
-
-# -------------------------------------------
-# БЛОК 2: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
+# БЛОК 1: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
 # -------------------------------------------
 def display_results(films, limit):
     if not films:
@@ -69,7 +21,7 @@ def display_results(films, limit):
     print('-' * 52)
 
 # -------------------------------------------
-# БЛОК 3: ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ В CSV-файл
+# БЛОК 2: ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ В CSV-файл
 # -------------------------------------------
 def save_data_to_csv(data, filename):
     if not data:
@@ -80,7 +32,7 @@ def save_data_to_csv(data, filename):
 
     try:
         with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.writer(csvfile)
+            writer = csv.writer(csvfile) # создаем писателя
             writer.writerow(header)
             writer.writerows(data)
             print(f"Отчет успешно сохранен в файл {filename}")
@@ -89,7 +41,7 @@ def save_data_to_csv(data, filename):
         print(f"Ошибка при сохранении файла: {e}")
 
 # -------------------------------------------
-# БЛОК 4: ГЛАВНАЯ ФУНКЦИЯ, УПРАВЛЯЮЩАЯ ЛОГИКОЙ СКРИПТА
+# БЛОК 3: ГЛАВНАЯ ФУНКЦИЯ, УПРАВЛЯЮЩАЯ ЛОГИКОЙ СКРИПТА
 # -------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
@@ -108,7 +60,24 @@ def main():
             help=f"Имя файла для сохранения CSV-отчета."
     )
     args = parser.parse_args()
-    film_data = get_data_from_db(args.limit)
+    sql_query = """
+        select
+            f.title,
+            count(r.rental_id) as rental_count
+        from
+    	    film f
+        join 
+    	    inventory using(film_id)
+        join 
+    	    rental r using(inventory_id)
+        group by
+    	    f.film_id
+        order by 
+    	    rental_count desc
+        limit %s;
+    """
+
+    film_data = execute_query(sql_query,(args.limit,))
     if film_data:
         display_results(film_data, args.limit)
         save_data_to_csv(film_data, args.output)
