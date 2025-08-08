@@ -52,12 +52,12 @@ def main():
             '--limit',
             type=int,
             default=10,
-            help=f"По умолчанию Топ-10 фильмов."
+            help="По умолчанию Топ-10 фильмов."
     )
     parser.add_argument(
             '--output',
             default="top_rented_films.csv",
-            help=f"Имя файла для сохранения CSV-отчета."
+            help="Имя файла для сохранения CSV-отчета."
     )
     args = parser.parse_args()
     sql_query = """

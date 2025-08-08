@@ -53,7 +53,7 @@ def main():
             '--limit',
             type=int,
             default=10,
-            help=f"По умолчанию Топ-10 актеров"
+            help="По умолчанию Топ-10 актеров"
     )
     parser.add_argument(
             '--output',
