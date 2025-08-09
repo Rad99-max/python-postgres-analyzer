@@ -1,6 +1,8 @@
 # Пример запуска из терминала:
 # python actor_analyzer.py --limit 10 --output top_films_report.csv
 
+import datetime  # <-- НАША "ГРЯЗНАЯ" СТРОКА
+import math  # <-- НАША "ГРЯЗНАЯ" СТРОКА
 import argparse
 import csv
 from database import execute_query
