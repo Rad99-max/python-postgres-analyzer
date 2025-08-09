@@ -1,0 +1,44 @@
+# Имя нашего workflow. Будет отображаться на GitHub.
+name: Linter Check
+
+# Триггеры: когда запускать этот workflow.
+on:
+  # Запускать при создании или обновлении Pull Request'а,
+  # который нацелен на ветку 'main'.
+  pull_request:
+    branches: [ "main" ]
+
+# Задачи (jobs), которые нужно выполнить.
+jobs:
+  # Имя нашей единственной задачи. Можете назвать как угодно.
+  run-linter:
+    # На какой операционной системе будет работать наш робот.
+    # 'ubuntu-latest' — самый распространенный и дешевый вариант.
+    runs-on: ubuntu-latest
+
+    # Шаги (steps), которые нужно выполнить последовательно.
+    steps:
+      # Шаг 1: Скачать код из нашего репозитория.
+      # 'uses: actions/checkout@v4' — это использование готового,
+      # стандартного экшена для скачивания кода.
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # Шаг 2: Настроить окружение Python.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # Указываем версию Python, которую хотим использовать.
+          python-version: '3.13'
+
+      # Шаг 3: Установить зависимости.
+      # 'run:' — это команда для выполнения в терминале робота.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      # Шаг 4: Запустить наш линтер.
+      - name: Run ruff linter
+        run: |
+          ruff check .
