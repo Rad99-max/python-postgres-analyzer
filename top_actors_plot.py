@@ -61,7 +61,7 @@ def creat_and_save_barchart(data, filename="top_actors_barchart.png"):
     try:
         plt.savefig(filename)
         full_path = os.path.abspath(filename)
-        print(f"График успешно сохранен в файл: {filename}")
+        print(f"График успешно сохранен в файл: {full_path}")
     except Exception as e:
         print(f"Ошибка при сохранении графика: {e}")
 
