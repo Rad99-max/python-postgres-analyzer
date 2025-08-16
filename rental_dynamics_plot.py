@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 from database import execute_query
 import os
 
+#-----------------------------------------------
+# Получает данные о динамике аренд из базы данных.
+#-----------------------------------------------
 def get_rental_dynamics():
-    """
-    Получает данные о динамике аренд из базы данных.
-    """
     sql_query = """
         select 
 	        to_char(rental_date, 'YYYY-MM') as rental_month,
@@ -20,10 +20,10 @@ def get_rental_dynamics():
     # Вызываем нашу универсальную функцию из database.py
     return execute_query(sql_query)
 
+#----------------------------------------------------------
+# Строит и сохраняет линейный график на основе полученных данных.
+#----------------------------------------------------------
 def create_and_save_plot(data, filename="rental_dynamics.png"):
-    """
-    Строит и сохраняет линейный график на основе полученных данных.
-    """
     if not data:
         print("Нет данных для построения графика.")
         return
@@ -53,10 +53,9 @@ def create_and_save_plot(data, filename="rental_dynamics.png"):
                 y=counts[i]+80,     # Координата Y текста
                                     # (чуть выше точки, +50)
                 s=str(counts[i]),   # Сам текст (количество аренд)
-                ha='center',         # Горизонтальное выравнивание по центру
+                ha='center',        # Горизонтальное выравнивание по центру
                 fontsize=16
         )
-# ------------------------------------------------
 
     # 4. Настраиваем внешний вид графика
     plt.title('Динамика количества аренд по месяцам', fontsize=18)
@@ -75,10 +74,10 @@ def create_and_save_plot(data, filename="rental_dynamics.png"):
     except Exception as e:
         print(f"Ошибка при сохранении графика: {e}")
 
+#---------------------------------------
+#  Главная функция скрипта.
+#---------------------------------------
 def main():
-    """
-    Главная функция скрипта.
-    """
     print("Получаю данные о динамике аренд...")
     rental_data = get_rental_dynamics()
     if rental_data:
