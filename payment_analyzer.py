@@ -1,5 +1,5 @@
 # Пример запуска из терминала:
-# python payment_analyzer.py --output top_films_report.csv
+# python payment_analyzer.py --output top_customers_report.csv
 
 import argparse
 import csv
