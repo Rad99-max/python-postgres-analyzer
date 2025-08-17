@@ -8,7 +8,7 @@ from database import execute_query
 #-------------------------------------------
 # БЛОК 1: ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ ИЗ БД
 #-------------------------------------------
-def get_top_customers_data():
+def get_top_customers_data(limit=10):
     sql_query = """
         select
             c.first_name || ' ' || c.last_name as customer_name,
@@ -21,19 +21,19 @@ def get_top_customers_data():
             c.customer_id 
         order by
             total_amount desc
-        limit 10;
+        limit %s;
     """
-    data = execute_query(sql_query)
+    data = execute_query(sql_query, (limit,))
     return data
 
 # -------------------------------------------
 # БЛОК 2: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
 # -------------------------------------------
-def display_results(data):
+def display_results(data, limit=10):
     if not data:
         print("Нет данных для отображения.")
         return
-    print("--- Топ-10 самых активных клиентов ---")
+    print(f"--- Топ-{limit} самых активных клиентов ---")
     print('-' * 52)
     print(f"| {'Имя и фамилия':<30} | {'Сумма':>15} |")
     print('-' * 52)
@@ -70,15 +70,21 @@ def main():
                         "покупателям фильмов"
     )
     parser.add_argument(
+            '--limit',
+            type=int,
+            default=10,
+            help="По умолчанию Топ-10 клиентов"
+    )
+    parser.add_argument(
             '--output',
             default="top_customers_report.csv",
             help="Имя файла для сохранения CSV-отчета."
     )
     args = parser.parse_args()
 
-    payment_data = get_top_customers_data()
+    payment_data = get_top_customers_data(args.limit)
     if payment_data:
-        display_results(payment_data)
+        display_results(payment_data, args.limit)
         save_report_to_csv(payment_data, args.output)
     else:
         print("Не удалось получить данные. Программа завершена.")
