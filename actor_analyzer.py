@@ -1,12 +1,36 @@
 # Пример запуска из терминала:
-# python actor_analyzer.py --limit 10 --output top_films_report.csv
+# python actor_analyzer.py --limit 10 --output top_actors.csv
 
 import argparse
 import csv
 from database import execute_query
 
+#----------------------------------------------
+# БЛОК 1: ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ ИЗ БД
+#----------------------------------------------
+def get_top_actors_data(limit):
+    # --- Формируем запрос и вызываем универсальную функцию ---
+    sql_query = """
+            select 
+                a.first_name,
+                a.last_name,
+                count(*)
+            from
+                actor a
+            join
+                film_actor using(actor_id)
+            group by
+                a.actor_id
+            order by
+                count(*) desc
+            limit %s;
+        """
+    # Вызываем универсальную функцию, передавая ей запрос и параметры
+    film_data = execute_query(sql_query, (limit,))
+    return film_data
+
 # -------------------------------------------
-# БЛОК 1: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
+# БЛОК 2: ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ДАННЫХ
 # -------------------------------------------
 def display_results(actors, limit):
     if not actors:
@@ -22,7 +46,7 @@ def display_results(actors, limit):
               f"{count_films:>15} |")
     print('-' * 60)
 # -------------------------------------------
-# БЛОК 2: ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ В CSV-файл
+# БЛОК 3: ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ В CSV-файл
 # -------------------------------------------
 def save_report_to_csv(data, filename):
     if not data:
@@ -42,7 +66,7 @@ def save_report_to_csv(data, filename):
         print(f"Ошибка при сохранении файла: {e}")
 
 # -------------------------------------------
-# БЛОК 3: ГЛАВНАЯ ФУНКЦИЯ, УПРАВЛЯЮЩАЯ ЛОГИКОЙ СКРИПТА
+# БЛОК 4: ГЛАВНАЯ ФУНКЦИЯ, УПРАВЛЯЮЩАЯ ЛОГИКОЙ СКРИПТА
 # -------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
@@ -62,24 +86,9 @@ def main():
     )
     args = parser.parse_args()
 
-# --- Формируем запрос и вызываем универсальную функцию ---
-    sql_query = """
-        select 
-            a.first_name,
-            a.last_name,
-            count(*)
-        from
-            actor a
-        join
-            film_actor using(actor_id)
-        group by
-            a.actor_id
-        order by
-            count(*) desc
-        limit %s;
-    """
-# Вызываем нашу новую функцию, передавая ей запрос и параметры
-    film_data = execute_query(sql_query, (args.limit,))
+    # Получаем данные из БД PostgreSQL
+    film_data = get_top_actors_data(args.limit)
+
     if film_data:
         display_results(film_data, args.limit)
         save_report_to_csv(film_data, args.output)
