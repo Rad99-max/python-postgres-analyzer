@@ -24,7 +24,7 @@ numpy==2.3.2
     #   seaborn
 packaging==25.0
     # via matplotlib
-pandas==2.3.1
+pandas==2.3.2
     # via seaborn
 pillow==11.3.0
     # via matplotlib
@@ -36,6 +36,8 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
+python-dotenv==1.1.1
+    # via -r requirements.in
 pytz==2025.2
     # via pandas
 seaborn==0.13.2
