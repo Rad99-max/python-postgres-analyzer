@@ -1,0 +1,43 @@
+# Имя нашего workflow
+name: CI Checks
+
+# Триггеры запуска
+on:
+  pull_request:
+    branches: [ "main" ]
+
+# Задачи (jobs)
+jobs:
+  # Название задачи
+  build-and-test:
+    # Операционная система
+    runs-on: ubuntu-latest
+
+    # Шаги выполнения
+    steps:
+      # 1. Скачиваем код
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # 2. Настраиваем Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # ВАЖНО: Ваша версия Python
+          python-version: '3.13'
+
+      # 3. Устанавливаем зависимости
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      # 4. Запускаем линтер
+      - name: Run ruff linter
+        run: |
+          ruff check .
+
+      # 5. Запускаем тесты
+      - name: Run tests with pytest
+        run: |
+          pytest
