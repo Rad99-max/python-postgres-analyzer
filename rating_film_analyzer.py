@@ -1,5 +1,5 @@
 # Пример запуска из терминала:
-# python rating_film_analyzer.py --limit 3 --output top_films_report.csv
+# python rating_film_analyzer.py --limit 3 --output top_films_long_report.csv
 
 import argparse
 import csv
@@ -68,7 +68,7 @@ def main():
     )
     parser.add_argument(
             '--output',
-            default="top_films_by_rating.csv",
+            default="top_films_long_rating.csv",
             help="Имя файла для сохранения CSV-отчета."
     )
     args = parser.parse_args()
