@@ -1,19 +1,23 @@
-# Файл: test_profitable_films_analyzer.py
+# Файл: test_rating_film_analyzer.py.
 # Все tests/test_файлы вызываются в терминале командой pytest
 
 # Импортируем функцию, которую будем тестировать
-from profitable_films_analyzer import get_profitable_films_data
+from rating_film_analyzer import get_top_rating_film_data
 
 # `mocker` - это специальный объект от pytest-mock, который мы
 # получаем как аргумент
-def test_get_profitable_films_data_returns_correct_data(mocker):
+def test_get_top_rating_film_data_returns_correct_data(mocker):
     # --- Шаг 1: Подготовка (Arrange) ---
 
     # 1.1. Создаем "тестовые" данные, которые якобы вернула БД
     mock_db_return_value = [
-        ('Telegraph Voyage', 215.75),
-        ('Zorro Ark', 199.72),
-        ('Wife Turn', 198.73)
+        ('Control Anthem', 'G', 185),
+        ('Darn Forrester', 'G', 185),
+        ('Muscle Bright', 'G', 185),
+        ('Moonwalker Fool', 'G', 184),
+        ('Worst Banger', 'PG', 185),
+        ('Records Zorro', 'PG', 182),
+        ('Monsoon Cause', 'PG', 182)
     ]
 
     # 1.2. Создаем "подделку" для функции execute_query
@@ -22,21 +26,26 @@ def test_get_profitable_films_data_returns_correct_data(mocker):
     mock_execute_query = mocker.patch(
             # Путь к функции, которую подменяем:
             # 'имя_файла.имя_функции'
-            'profitable_films_analyzer.execute_query',
+            'rating_film_analyzer.execute_query',
+
             # Говорим, что при вызове эта подделка должна
             # вернуть наши данные.
-            return_value=mock_db_return_value
+            return_value = mock_db_return_value
     )
 
     # --- Шаг 2: Действие (Act) ---
 
     # Вызываем нашу реальную функцию. Она вызовет нашу подделку.
-    actual_result = get_profitable_films_data(limit=3)
+    actual_result = get_top_rating_film_data(limit=2)
 
     # --- Шаг 3: Проверка (Assert) ---
 
-    # 3.1. Проверяем, что наша подделка была вызвана ровно 1 раз.
-    mock_execute_query.assert_called_once()
+    # 3.2. Проверяем, С КАКИМИ АРГУМЕНТАМИ была вызвана подделка.
+    # Мы ожидаем, что SQL-запрос (он длинный, его можно не
+    # проверять) и кортеж с лимитом (2,) были переданы.
+    # mocker.ANY - это специальный маркер, который говорит
+    # "здесь мог быть любой SQL-запрос".
+    mock_execute_query.assert_called_once_with(mocker.ANY, (2,))
 
     # 3.2. Проверяем, что наша функция вернула именно те данные,
     # которые мы "скормили" нашей подделке.
